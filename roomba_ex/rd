@@ -1,0 +1,160 @@
+#!/bin/sh
+#
+# roombacmd.sh -- Simple shell-based Roomba command-line tool
+#
+# http://roombahacking.com/
+#
+# Copyright (C) 2006, Tod E. Kurt, tod@todbot.com
+#
+#
+
+# in case we have stty in the current directory
+PATH=${PATH}:.
+
+usage() {
+        echo "Usage: $0 {serialport} {init|forward|backward|spinleft|spinright|stop}" >&2
+        exit 1
+}
+
+roomba_init() {
+    os=`uname -s`
+    if [ "$os" == "Linux" ]; then
+        stty -F $PORT 57600 raw -parenb -parodd cs8 -hupcl -cstopb clocal
+    elif [ "$os" == "Darwin" ]; then
+        stty -f $PORT 57600 raw -parenb -parodd cs8 -hupcl -cstopb clocal
+    fi
+    printf "\x80" > $PORT;   #sleep 1
+    printf "\x83" > $PORT;   sleep 1
+    printf "\x93\x02" > $PORT  # pin7 = high
+
+}
+roomba_dock() {
+    printf "\x88\x01" > $PORT 
+}
+roomba_charge() { 
+    printf "\x80" > $PORT 
+}
+
+roomba_mouse() { 
+    printf "\x88\x03" > $PORT 
+}
+roomba_forward() {
+  #  vel="\x00\xc8"
+    rad="\x80\x00"
+    printf "\x89$vel$rad" > $PORT
+}
+roomba_backward() {
+#    vel="\xff\x38"
+    rad="\x80\x00"
+    printf "\x89$vel$rad" > $PORT
+}
+roomba_spinleft() {
+    rad="\x00\x01"
+    printf "\x89$vel$rad" > $PORT
+}
+
+roomba_waitspinright() {
+    vel=`printf "\%s%02x\%s%02x" "x" $((($1 >> 8)&0xFF)) "x" $(($1 & 0xFF))`
+    ang=`printf "\%s%02x\%s%02x" "x" $((($2 >> 8)&0xFF)) "x" $(($2 & 0xFF))`
+    rad="\xff\xff"
+	exit 1
+    printf "\x89$vel$rad" > $PORT            # spin
+    printf "\x9d$ang" > $PORT                # wait angle 
+    printf "\x89\x00\x00\x00\x00" > $PORT    # stop 
+}
+
+roomba_spinright() {
+#    vel="\x00\xc8"
+    rad="\xff\xff"
+    printf "\x89$vel$rad" > $PORT
+}
+roomba_stop() {
+    vel="\x00\x00"
+    rad="\x00\x00"
+    printf "\x89$vel$rad" > $PORT
+}
+
+roomba_sensors() { 
+code="\x8e\x00"
+dd if=$PORT bs=1 count=26 | od -h &
+printf "$code" > $PORT
+wait
+}
+
+roomba_read_ADC() { 
+code="\x8e\x21"
+x=`{ dd if=$PORT bs=1 count=1 2> /dev/null| od -h | head -n1 | awk '{print $2}'; }`  &
+printf "$code" > $PORT
+echo "wait x=$x jobs=`jobs`."
+wait
+echo $x
+}
+
+roomba_38K() {
+    code="\x81\x05"
+    printf "$code" > $PORT
+}
+
+# If not enough arguments were passed, return
+[ -z "$1" ] && usage
+
+
+#PORT=$1
+PORT="/dev/roomba"
+
+if [ $# -le 1 ]; then 
+    	vel="\x00\xc8" # 200 mm/sec
+else 
+	#if [ "x$1x" == "xbackwardx" ]; then 
+	#	vel=$((-$vel))
+	#fi
+    	vel=`printf "\%s%02x\%s%02x" "x" $((($2 >> 8)&0xFF)) "x" $(($2 & 0xFF))`
+fi
+
+echo "$vel=velo"
+
+case $1 in
+    init)
+        roomba_init
+        ;;
+    forward)
+        roomba_forward
+        ;;
+    backward)
+        roomba_backward
+        ;;
+    spinleft)
+        roomba_spinleft $2
+        ;;
+    spinright)
+        roomba_spinright $2
+        ;;
+    waitspinright)
+        roomba_waitspinright $2 $3 # speed angle
+        ;;
+    stop)
+        roomba_stop
+        ;;
+    38K)
+	roomba_38K
+	;;
+    ADC) 
+	roomba_read_ADC
+	;;
+    sensors)
+	roomba_sensors
+	;;
+    dock)
+	roomba_dock 
+	;;
+    charge)
+	roomba_charge
+	;;
+    mouse)
+	roomba_mouse
+	;;
+    *)
+        usage
+        ;;
+esac
+#exit 0
