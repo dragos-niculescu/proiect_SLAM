@@ -1,14 +1,14 @@
 
-NAME = cntrl
-VERSION = 0.0.1
+NAME = libroomba
+VERSION = 0.1
 DISTNAME = $(NAME)-$(VERSION)
 
+include ../build_rule.mk
 
-CFLAGS = -O  -Wextra  -I.
-CC = gcc
-C++ = g++
+CPPFLAGS = -O -Wextra -fPIC  -I.
+#C++ = g++
 
-BINARIES = cntrl 
+BINARIES = libroomba.a libroomba.so
 
 all: $(BINARIES)
 
@@ -16,17 +16,17 @@ clean:
 	rm -f *.o $(BINARIES)
 	#rm -f $(DISTNAME).tar.gz
 
-#.c.o:
-#	$(CC) $(CFLAGS) -c $^ 
-
 .cc.o:
-	$(C++) $(CFLAGS) -c $^
+	$(CXX) $(CPPFLAGS) -c $^
 
 
-cntrl: cntrl.o roombalib.o 
-	$(C++) $(CFLAGS) -lm  $^ -o $@ 
+libroomba.a: roombalib.o 
+	$(AR) rv $@ $^ 
+
+libroomba.so: roombalib.o 
+	$(CXX) $(CPPFLAGS) -lm -shared -o $@ $^
 
 dist:
 	echo "Building dist $(DISTNAME).tar.gz"
-	tar -C .. --exclude=*.tar.gz --exclude=*.svn --exclude=*~ \
+	tar -C .. --exclude=*.tar.gz --exclude=*.git --exclude=*~ \
         -cvzf $(DISTNAME).tar.gz $(NAME)

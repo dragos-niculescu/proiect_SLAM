@@ -1,3 +1,7 @@
-# proiect_SLAM:
-# Fiecare subdirector are un fisier makefile.
-#   Momentan am nevoie de un makefile pentru a putea compila un program de explorare, care sa foloseasca atat subrutinele din roomba_ex cat si din urg_1.
+# Structura directoare:
+#
+# roomba - biblioteca cu funcții de robot
+# urg_library-1.1.8 - biblioteca cu funcții de sonar 
+#
+# src - cod care apelează funcții din cele două biblioteci 
+#

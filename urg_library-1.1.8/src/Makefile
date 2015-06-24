@@ -10,7 +10,7 @@ OBJ_C = urg_sensor.o urg_utils.o urg_debug.o urg_connection.o \
         urg_ring_buffer.o urg_serial.o urg_serial_utils.o urg_tcpclient.o
 OBJ_CPP = ticks.o Urg_driver.o
 
-include ../build_rule.mk
+include ../../build_rule.mk
 
 CFLAGS = -g -O2 $(INCLUDES) -I../include/c -fPIC
 CXXFLAGS = $(CFLAGS) -I../include/cpp

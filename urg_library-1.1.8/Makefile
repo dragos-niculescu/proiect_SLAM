@@ -1,7 +1,7 @@
 PREFIX = /usr/local
 #PREFIX = /mingw
 
-include build_rule.mk
+include ../build_rule.mk
 
 CONFIG_FILE = urg_c-config
 CONFIG_FILE_CPP = urg_cpp-config
@@ -12,7 +12,7 @@ URGLIB_C_SHARED = $(shell if test `echo $(OS) | grep Windows`; then echo "urg_c.
 URGLIB_CPP_STATIC = liburg_cpp.a
 URGLIB_CPP_SHARED = $(shell if test `echo $(OS) | grep Windows`; then echo "urg_cpp.dll"; else echo "liburg_cpp.so"; fi)
 S_PREFIX = $(shell echo "$(PREFIX)" | sed "s/\//\\\\\\\\\//g")
-S_LIBS = $(shell if test `echo $(OS) | grep Windows`; then echo "-lwsock32 -lsetupapi"; else if test `echo $(OS) | grep Mac`; then echo ""; else "-lrt"; fi)
+S_LIBS = $(shell if test `echo $(OS) | grep Windows`; then echo "-lwsock32 -lsetupapi"; else if test `echo $(OS) | grep Mac`; then echo ""; else "-lrt"; fi; fi)
 all : $(CONFIG_FILE) $(CONFIG_FILE_CPP)
 	cd src/ && $(MAKE)
 	cd samples/ && $(MAKE)
